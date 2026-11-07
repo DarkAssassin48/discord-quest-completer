@@ -3,7 +3,7 @@ import type { CompanionEvent } from "./companionEvents";
 
 export const statusRu: Record<string, string> = {
     RUNNING: "Выполняется", QUEUE: "В очереди", PAUSED: "На паузе", PENDING: "Доступно",
-    COMPLETED: "Выполнено", FAILED: "Ошибка", SKIPPED: "Пропущено", STOPPED: "Остановлено",
+    COMPLETED: "Выполнено", CLAIMED: "Получено", FAILED: "Ошибка", SKIPPED: "Пропущено", STOPPED: "Остановлено",
 };
 export const taskTypeRu: Record<string, string> = {
     GAME: "Игра", STREAM: "Трансляция", WATCH_VIDEO: "Видео", ACTIVITY: "Активность", ACHIEVEMENT: "Достижение",
@@ -44,6 +44,12 @@ export function progressRu(current: number, max: number, type: string): string {
     const target = Number.isFinite(max) ? Math.max(0, Math.floor(max)) : 0;
     const cur = Math.min(Number.isFinite(current) ? Math.max(0, Math.floor(current)) : 0, target);
     return `${cur.toLocaleString("ru-RU")} / ${target.toLocaleString("ru-RU")}${type === "ACHIEVEMENT" ? "" : " с"}`;
+}
+
+export function isDashboardShortcut(event: Pick<KeyboardEvent, "code" | "key" | "shiftKey" | "ctrlKey" | "altKey" | "metaKey">): boolean {
+    const period = event.code === "Period" || event.key === ">" || event.key === "."
+        || (event.code === "Slash" && event.key === ",");
+    return period && event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey;
 }
 
 export function outcomeTextRu(value: string): string {

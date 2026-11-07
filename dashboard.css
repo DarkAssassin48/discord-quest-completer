@@ -1,60 +1,138 @@
-.orion-ru-toolbar-button { color: #a89bff !important; }
-#orion-vencord-ru {
-    position: fixed; top: 48px; right: 20px; z-index: 1002; width: 370px;
-    max-width: calc(100vw - 24px); max-height: calc(100vh - 64px);
-    display: flex; flex-direction: column; overflow: hidden; border-radius: 12px;
-    background: var(--background-surface-high, #242429); color: var(--text-default, #eeeef2);
-    border: 1px solid var(--border-subtle, #45454e); box-shadow: 0 12px 48px #0008;
-    font: 13px/1.4 var(--font-primary, "Segoe UI", sans-serif);
-}
-#orion-vencord-ru[hidden] { display: none !important; }
-#orion-vencord-ru [hidden] { display: none !important; }
-#orion-vencord-ru * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: #666371 transparent; }
-#orion-vencord-ru button { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--border-subtle, #45454e); border-radius: 6px; background: var(--background-modifier-hover, #ffffff0a); padding: 6px 9px; }
-#orion-vencord-ru button:hover { background: var(--background-modifier-selected, #ffffff18); }
-#orion-vencord-ru button:focus-visible { outline: 2px solid #b8b0ff; outline-offset: 2px; }
+#orion-vencord-ru {position: fixed; top: 48px; left: auto; right: 20px; width: 380px;
+                    max-width: calc(100vw - 16px); max-height: min(72vh, 760px);
+                    background: var(--background-base-low); color: var(--text-default);
+                    border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+                    box-shadow: var(--shadow-button-overlay); z-index: 1001;
+                    font-family: var(--font-primary);
+                    overflow: hidden;
+                    display: flex; flex-direction: column; box-sizing: border-box;
+                    user-select: none;-webkit-app-region: no-drag;}
+#orion-vencord-ru #orion-head {padding: 12px 16px; background: var(--background-mod-muted); flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); cursor: grab;}
+#orion-vencord-ru #orion-head.dragging {cursor: grabbing; background: var(--control-secondary-background-default);}
+#orion-vencord-ru .orion-title {font-weight: 700; font-size: 15px; color: var(--text-strong); display: flex; align-items: center; gap: 8px;}
+#orion-vencord-ru .orion-title svg {color: var(--text-brand);}
+#orion-vencord-ru .dev-credit {font-size: 12px; margin-left: -4px; padding-top: 2px; font-weight: 500; color: var(--text-muted);}
+#orion-vencord-ru .orion-controls {display: flex; gap: 10px; align-items: center;}
+#orion-vencord-ru .ctrl-btn {cursor: pointer; transition: 0.2s; display: flex; align-items: center;}
+#orion-vencord-ru .ctrl-hide, #orion-vencord-ru .ctrl-opts {font-size: 11px; font-weight: 600; color: var(--text-muted);}
+#orion-vencord-ru .ctrl-hide:hover, #orion-vencord-ru .ctrl-opts:hover {color: var(--text-default);}
+#orion-vencord-ru .ctrl-stop {font-size: 11px; font-weight: 700; gap: 4px; padding: 3px 8px 3px 6px; border-radius: var(--radius-sm); background: transparent; border: 1px solid var(--control-critical-primary-background-default); color: var(--control-critical-primary-background-default);}
+#orion-vencord-ru .ctrl-stop:hover {background: var(--control-critical-primary-background-default); color: #fff;}
+#orion-vencord-ru #orion-logs {padding: 10px 14px; background: var(--background-base-lower); flex: 0 0 auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 11px; height: 110px; overflow-y: auto; border-top: 1px solid var(--border-subtle); scroll-behavior: smooth;}
+#orion-vencord-ru .log-item {margin-bottom: 6px; display: flex; gap: 8px; line-height: 1.4; padding-bottom: 4px;}
+#orion-vencord-ru .log-ts {opacity: 0.5; min-width: 50px; font-size: 10px;}
+#orion-vencord-ru .c-info {color: var(--text-feedback-info); opacity: .8;}
+#orion-vencord-ru .c-success {color: var(--text-feedback-positive);}
+#orion-vencord-ru .c-err {color: var(--text-feedback-critical);}
+#orion-vencord-ru .c-warn {color: var(--text-feedback-warning);}
+#orion-vencord-ru .c-debug {color: #949ba4;}
+#orion-vencord-ru #orion-body {flex: 1 1 auto; padding: 12px; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;}
+#orion-vencord-ru #orion-picker-form {display: flex; flex-direction: column; min-height: 0;}
+#orion-vencord-ru ::-webkit-scrollbar {width: 4px; height: 4px;}
+#orion-vencord-ru ::-webkit-scrollbar-track {background: transparent;}
+#orion-vencord-ru ::-webkit-scrollbar-thumb {background: var(--scrollbar-auto-scrollbar-color-thumb); border-radius: 4px;}
+#orion-vencord-ru .task-card {--state-color: var(--ansi-bright-blue);
+                    --icon-bg-opacity: 15%;
+                    --icon-color: var(--state-color);
+
+                    display: flex; gap: 12px; padding: 10px 12px; margin-bottom: 8px; align-items: center;
+                    background: var(--control-secondary-background-default);
+                    border-radius: var(--radius-sm); border: 1px solid var(--border-muted);
+                    border-left: 4px solid var(--state-color);
+                    box-shadow: var(--shadow-low); transition: 0.3s; flex-shrink: 0;}
+#orion-vencord-ru .task-card.removing {animation: fadeOut 0.4s forwards;}
+#orion-vencord-ru .task-card.done {--state-color: var(--ansi-green); --icon-bg-opacity: 100%; --icon-color: #fff;}
+#orion-vencord-ru .task-card.failed {--state-color: var(--ansi-red);}
+#orion-vencord-ru .task-card.pending {--state-color: var(--ansi-bright-yellow);}
+#orion-vencord-ru .task-icon {position: relative; width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto; background-color: color-mix(in srgb, var(--state-color) var(--icon-bg-opacity), transparent); display: flex; align-items: center; justify-content: center;}
+#orion-vencord-ru .task-card.running .task-icon::before {content: ''; position: absolute; inset: 0; border-radius: 50%; z-index: 1; background: conic-gradient(lch(71 59 139) 0% var(--p, 0%), var(--border-subtle) var(--p, 0%) 100%); -webkit-mask-image: radial-gradient(circle at center, transparent 16px, black 17px); mask-image: radial-gradient(circle at center, transparent 16px, black 17px);}
+#orion-vencord-ru .task-icon > .orion-icon {z-index: 2; color: var(--icon-color); display: flex; transition: filter 0.2s, opacity 0.2s;}
+#orion-vencord-ru .task-card.running:hover .task-icon > .orion-icon {filter: blur(2px); opacity: 0.3;}
+#orion-vencord-ru .task-icon-overlay {position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--text-default); opacity: 0; transition: opacity 0.2s; pointer-events: none;}
+#orion-vencord-ru .task-card.running:hover .task-icon-overlay {opacity: 1;}
+#orion-vencord-ru .task-info {flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; justify-content: center;}
+#orion-vencord-ru .task-status {font-size: 10px; font-weight: 800; color: var(--state-color); text-transform: uppercase; letter-spacing: 0.5px;}
+#orion-vencord-ru .task-name {font-size: 13px; font-weight: 700; color: var(--text-strong); letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;}
+#orion-vencord-ru .task-meta {font-size: 11px; font-weight: 700; color: var(--text-muted); display: flex; justify-content: space-between;}
+#orion-vencord-ru .task-actions {flex: 0 0 auto; display: flex; align-items: center; margin-left: 4px;}
+#orion-vencord-ru .claim-btn, #orion-vencord-ru .goto-btn {padding: 6px 10px; border: none; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; font-family: inherit; color: #fff;}
+#orion-vencord-ru .claim-btn {background: var(--control-connected-background-default);}
+#orion-vencord-ru .claim-btn:hover:not(:disabled) {background: var(--control-connected-background-hover);}
+#orion-vencord-ru .claim-btn:disabled {opacity: 0.5; cursor: not-allowed;}
+#orion-vencord-ru .claim-btn.failed {background: var(--control-secondary-background-active); color: var(--text-default);}
+#orion-vencord-ru .goto-btn {background: var(--control-primary-background-default);}
+#orion-vencord-ru .goto-btn:hover:not(:disabled) {background: var(--control-primary-background-hover);}
+#orion-vencord-ru .picker-section-title {font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;}
+#orion-vencord-ru .reward-filters {display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; flex-shrink: 0;}
+#orion-vencord-ru .reward-filter, #orion-vencord-ru .type-filter {background-color: transparent; border: 2px solid; padding: 4px 10px; border-radius: 24px; font-size: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-subtle); font-family: inherit;}
+#orion-vencord-ru .reward-filter:hover, #orion-vencord-ru .type-filter:hover {background-color: color-mix(in srgb, currentColor 25%, transparent);}
+#orion-vencord-ru .reward-filter.off, #orion-vencord-ru .type-filter.off {background: transparent; color: var(--text-muted); opacity: 0.4;}
+#orion-vencord-ru .picker-quest-list {display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 50px; overflow-y: auto; padding-right: 4px;}
+#orion-vencord-ru .quest-pick {display: flex; gap: 12px; padding: 10px; background: var(--control-secondary-background-default); border-radius: var(--radius-sm); border: 1px solid var(--border-muted); border-left-width: 4px; cursor: pointer; transition: 0.2s; align-items: center; user-select: none; flex-shrink: 0;}
+#orion-vencord-ru .quest-pick:hover {filter: brightness(1.15);}
+#orion-vencord-ru .quest-pick.hidden {display: none !important;}
+#orion-vencord-ru .native-cb {appearance: none; width: 20px; height: 20px; margin: 0; flex-shrink: 0; border: 1px solid var(--checkbox-border-default); border-radius: var(--radius-xs); background: transparent; cursor: pointer; transition: 0.15s; display: grid; place-content: center;}
+#orion-vencord-ru .native-cb::before {content: ''; width: 12px; height: 12px; opacity: 0; transition: 0.1s;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+                    background-size: contain; background-repeat: no-repeat; background-position: center;}
+#orion-vencord-ru .native-cb:checked {background: var(--checkbox-background-selected-default); border-color: var(--checkbox-border-selected-default);}
+#orion-vencord-ru .native-cb:checked::before {opacity: 1;}
+#orion-vencord-ru .picker-options {display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;}
+#orion-vencord-ru .orion-option {display: flex; justify-content: space-between; align-items: center; background: var(--control-secondary-background-default); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-muted);}
+#orion-vencord-ru .orion-option-label {font-size: 13px; font-weight: 500; color: var(--text-default);}
+#orion-vencord-ru .native-toggle {appearance: none; width: 40px; height: 20px; margin: 0; flex-shrink: 0; background: var(--control-secondary-background-default); border-radius: 12px; cursor: pointer; position: relative; transition: 0.2s; border: 1px solid var(--border-muted);}
+#orion-vencord-ru .native-toggle::after {content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: white; border-radius: 50%; box-shadow: var(--shadow-low); transition: 0.2s;}
+#orion-vencord-ru .native-toggle:checked {background: var(--control-primary-background-default);}
+#orion-vencord-ru .native-toggle:checked::after {transform: translateX(20px);}
+#orion-vencord-ru .orb-total {display: none; padding-top: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #5865F2; text-align: center; flex-shrink: 0;}
+#orion-vencord-ru .picker-actions {display: flex; gap: 10px; padding-top: 12px; flex-shrink: 0;}
+#orion-vencord-ru .quest-pick-btn {flex: 1; padding: 10px; border: 1px solid; border-radius: var(--radius-sm, 8px); font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; color: #fff;}
+#orion-vencord-ru .quest-pick-btn.start {background-color: var(--control-connected-background-default); border-color: var(--control-connected-border-default);}
+#orion-vencord-ru .quest-pick-btn.start:hover:not(:disabled) {background: var(--control-connected-background-hover); border-color: var(--control-connected-border-hover);}
+#orion-vencord-ru .quest-pick-btn.deselect {background-color: var(--control-secondary-background-default); border-color: var(--control-secondary-border-default); color: var(--text-default);}
+#orion-vencord-ru .quest-pick-btn.deselect:hover:not(:disabled) {background: var(--control-secondary-background-hover);}
+#orion-vencord-ru .quest-pick-btn:disabled {opacity: 0.5; cursor: not-allowed;}
+.orion-ru-toolbar-button { color: var(--text-brand, #949cf7) !important; }
+#orion-vencord-ru { z-index: 1002; font-size: 13px; line-height: 1.4; }
+#orion-vencord-ru, #orion-vencord-ru * { box-sizing: border-box; }
+#orion-vencord-ru[hidden], #orion-vencord-ru [hidden] { display: none !important; }
+#orion-vencord-ru button { font-family: inherit; }
 #orion-vencord-ru button:disabled { opacity: .45; cursor: default; }
-#orion-vencord-ru .orion-ru-header { display: flex; align-items: center; gap: 5px; padding: 12px 12px 7px; }
-#orion-vencord-ru .orion-ru-title { font-size: 16px; font-weight: 700; flex: 1; color: #bab1ff; }
-#orion-vencord-ru .orion-ru-version { display: inline-block; margin-left: 8px; font-size: 10px; color: var(--text-muted, #a5a5b1); font-weight: 500; }
-#orion-vencord-ru .orion-ru-icon { border: 0; padding: 3px 7px; font-size: 19px; }
-#orion-vencord-ru .orion-ru-state-row { padding: 0 12px 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-#orion-vencord-ru .orion-ru-state { font-size: 11px; font-weight: 600; color: var(--text-muted, #bbb); }
-#orion-vencord-ru .orion-ru-state[data-running="true"] { color: #7ddeac; }
-#orion-vencord-ru .orion-ru-shortcut { font-size: 10px; color: var(--text-muted, #a5a5b1); }
-#orion-vencord-ru .orion-ru-actions { display: flex; gap: 5px; padding: 0 12px 12px; }
-#orion-vencord-ru .orion-ru-actions button { padding: 6px 8px; font-size: 11px; flex: 1; }
-#orion-vencord-ru .orion-ru-actions .primary { background: #5865f2; border-color: #5865f2; color: white; }
-#orion-vencord-ru .orion-ru-actions .danger { color: #ff9b9e; border-color: #f0474770; }
-#orion-vencord-ru .orion-ru-cards { padding: 0 12px; overflow: auto; max-height: min(46vh, 440px); min-height: 80px; }
-#orion-vencord-ru .orion-ru-card { display: flex; align-items: center; gap: 10px; border-left: 3px solid #92929f; background: var(--background-mod-subtle, #ffffff08); border-radius: 7px; padding: 10px; margin-bottom: 7px; }
-#orion-vencord-ru .orion-ru-card[data-status="RUNNING"] { border-left-color: #7e88ff; }
-#orion-vencord-ru .orion-ru-card[data-status="QUEUE"] { border-left-color: #edaa54; }
-#orion-vencord-ru .orion-ru-card[data-status="COMPLETED"] { border-left-color: #3ba55c; }
-#orion-vencord-ru .orion-ru-card[data-status="FAILED"] { border-left-color: #f04747; }
-#orion-vencord-ru .orion-ru-task-icon { color: #a79aff; font-size: 25px; text-align: center; width: 34px; }
-#orion-vencord-ru .orion-ru-task-details { min-width: 0; flex: 1; }
-#orion-vencord-ru .orion-ru-status { color: #b8adff; font-size: 10px; font-weight: 700; }
-#orion-vencord-ru .orion-ru-task-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#orion-vencord-ru .orion-ru-task-meta { color: var(--text-muted, #a5a5b1); font-size: 10px; margin-top: 2px; }
-#orion-vencord-ru progress { display: block; width: 100%; height: 5px; margin-top: 7px; accent-color: #8f87ff; }
-#orion-vencord-ru .orion-ru-inline { margin-top: 6px; font-size: 10px; padding: 3px 6px; color: #bfb7ff; }
-#orion-vencord-ru .orion-ru-log-title { padding: 10px 12px 5px; font-size: 10px; color: var(--text-muted, #a5a5b1); }
-#orion-vencord-ru .orion-ru-log { background: #0002; margin: 0 12px; padding: 8px; max-height: 150px; min-height: 50px; overflow: auto; font-size: 10px; }
-#orion-vencord-ru .orion-ru-log-row { display: flex; gap: 7px; margin: 3px 0; overflow-wrap: anywhere; }
-#orion-vencord-ru time { color: var(--text-muted, #a5a5b1); flex-shrink: 0; }
-#orion-vencord-ru .success { color: #76dba2; }
-#orion-vencord-ru .warning { color: #efbb71; }
-#orion-vencord-ru .error { color: #ff9b9e; }
-#orion-vencord-ru .orion-ru-empty, #orion-vencord-ru .orion-ru-notice { color: var(--text-muted, #a5a5b1); padding: 12px 5px; font-size: 12px; }
-#orion-vencord-ru .orion-ru-footer { display: flex; justify-content: flex-end; padding: 10px 12px; }
-#orion-vencord-ru .orion-ru-footer button { font-size: 11px; color: #bbb2ff; border: 0; }
-#orion-vencord-ru .orion-ru-content { min-height: 0; overflow: auto; }
-#orion-vencord-ru .orion-ru-settings { padding: 0 12px 12px; overflow: auto; }
-#orion-vencord-ru .orion-ru-settings-title { font-size: 14px; font-weight: 700; padding: 8px 0; }
-#orion-vencord-ru .orion-ru-setting { display: block; padding: 10px 0; border-bottom: 1px solid var(--border-subtle, #45454e); }
-#orion-vencord-ru .orion-ru-setting-top { display: flex; align-items: center; gap: 12px; font-weight: 600; }
-#orion-vencord-ru .orion-ru-setting-top > span { flex: 1; }
-#orion-vencord-ru .orion-ru-setting input { width: 18px; height: 18px; flex-shrink: 0; accent-color: #8f87ff; }
-#orion-vencord-ru .orion-ru-setting select { border: 1px solid var(--border-subtle, #45454e); border-radius: 5px; background: var(--background-surface-high, #242429); color: inherit; padding: 4px 7px; }
-#orion-vencord-ru .orion-ru-setting-description { display: block; color: var(--text-muted, #a5a5b1); font-size: 11px; margin-top: 5px; }
+#orion-vencord-ru :focus-visible { outline: 2px solid #9ba2ff; outline-offset: 2px; }
+#orion-vencord-ru #orion-head { gap: 6px; padding: 12px 14px; touch-action: none; }
+#orion-vencord-ru .orion-title { min-width: 0; }
+#orion-vencord-ru .dev-credit { display: inline; font-size: 10px; margin-left: 5px; padding: 0; }
+#orion-vencord-ru .orion-version { display: block; font-size: 9px; font-weight: 500; color: var(--text-muted); }
+#orion-vencord-ru .orion-controls { gap: 9px; }
+#orion-vencord-ru .ctrl-btn { background: transparent; border: 0; padding: 0; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+#orion-vencord-ru .ctrl-stop { border: 1px solid var(--control-critical-primary-background-default); padding: 3px 7px; }
+#orion-vencord-ru .orion-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#orion-vencord-ru .orion-summary { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; }
+#orion-vencord-ru .running-text { color: var(--text-feedback-positive); }
+#orion-vencord-ru .orion-filters { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; flex-shrink: 0; }
+#orion-vencord-ru .reward-filter, #orion-vencord-ru .type-filter { border-width: 1px; padding: 3px 9px; color: var(--text-brand); }
+#orion-vencord-ru .type-filter { color: var(--text-muted); }
+#orion-vencord-ru .task-card { margin: 0; }
+#orion-vencord-ru .task-meta { font-size: 10px; gap: 6px; }
+#orion-vencord-ru .reward-value { color: var(--text-brand); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#orion-vencord-ru .claim-btn, #orion-vencord-ru .goto-btn { font-size: 10px; padding: 6px 9px; text-transform: none; }
+#orion-vencord-ru .orb-total { display: block; }
+#orion-vencord-ru .quest-pick-btn { font-size: 12px; padding: 9px; }
+#orion-vencord-ru .orion-reward-actions { display: flex; gap: 8px; padding-top: 10px; align-items: center; justify-content: space-between; flex-shrink: 0; }
+#orion-vencord-ru .orion-link { color: var(--text-muted); border: 0; background: transparent; font-size: 10px; cursor: pointer; }
+#orion-vencord-ru #orion-logs { user-select: text; }
+#orion-vencord-ru .log-item { overflow-wrap: anywhere; }
+#orion-vencord-ru .log-ts { flex-shrink: 0; }
+#orion-vencord-ru .info { color: var(--text-feedback-info); }
+#orion-vencord-ru .success { color: var(--text-feedback-positive); }
+#orion-vencord-ru .error { color: var(--text-feedback-critical); }
+#orion-vencord-ru .warning { color: var(--text-feedback-warning); }
+#orion-vencord-ru .orion-setting { display: block; padding-bottom: 12px; flex-shrink: 0; }
+#orion-vencord-ru .orion-option { gap: 10px; padding: 8px 10px; }
+#orion-vencord-ru .orion-option-label { font-size: 12px; font-weight: 600; }
+#orion-vencord-ru select { background: var(--background-base-lower); border: 1px solid var(--border-subtle); border-radius: 4px; color: inherit; padding: 3px 6px; }
+#orion-vencord-ru .orion-description { display: block; font-size: 10px; color: var(--text-muted); padding: 5px 2px 0; }
+#orion-vencord-ru .orion-empty { padding: 20px 8px; text-align: center; color: var(--text-muted); font-size: 12px; }
+#orion-vencord-ru .orion-notice { padding: 0 12px 8px; font-size: 11px; color: var(--text-muted); }
+#orion-vencord-ru .orion-notice:empty { display: none; }
+#orion-vencord-ru.collapsed > :not(#orion-head) { display: none; }

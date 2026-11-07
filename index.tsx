@@ -37,6 +37,7 @@ import {
 import { repairSuppressedPresence } from "./patcher";
 import { formatOrbBalance, formatOrbReward, questOrbReward, totalOrbReward, type OrbReward } from "./questRewards";
 import { resolveQuestTarget } from "./questTarget";
+import { destroyRewardClaims, initializeRewardClaims, readRewardClaims, resumeRewardClaims, suspendRewardClaims } from "./rewardService";
 import type { SchedulerSnapshot } from "./schedulerMetadata";
 import { settings } from "./settings";
 import { outcomeTextRu, statusRu } from "./uiRu";
@@ -46,7 +47,7 @@ import { outcomeTextRu, statusRu } from "./uiRu";
  * not say which build it came from and neither could the person triaging it (issue #66).
  * tools/package-release.ps1 refuses to package if this and the userscript disagree.
  */
-export const PLUGIN_VERSION = "v4.11.5-ru.1";
+export const PLUGIN_VERSION = "v4.11.5-ru.2";
 
 
 /*
@@ -173,10 +174,11 @@ function disarmAccountWatcher(): void {
 
 // No local engine-running mirror: startOrion() publishes its own state synchronously, so a
 // second boolean could only disagree with the source of truth.
-async function ensureStart(): Promise<string> {
+async function ensureStart(selectedIds?: string[]): Promise<string> {
     // Re-arm even if the engine is already running. A start after an explicit stop restores the
     // watcher lifetime requested by the setting.
     armWatcher();
+    resumeRewardClaims();
     if (isEngineRunning()) return "Уже запущено.";
     // startOrion() resolves when the whole run is over, so it is normally left unawaited: a run
     // lasts as long as its quests do. A run with nothing to do is the exception, and answering
@@ -188,7 +190,7 @@ async function ensureStart(): Promise<string> {
     // for an empty run about as often as not, because the first scan is not reliably finished by
     // then. Polling until the engine stops was also tried and cost 2.2s on every healthy start,
     // since a healthy start is exactly the case that never exits the poll early.
-    const run = startOrion().then(() => true, () => true);
+    const run = startOrion(selectedIds).then(() => true, () => true);
     const endedImmediately = await Promise.race([
         run,
         new Promise<boolean>(resolve => setTimeout(() => resolve(false), 400)),
@@ -204,11 +206,12 @@ async function ensureStart(): Promise<string> {
 }
 
 function ensureStop(): string {
+    suspendRewardClaims();
     const wasWatching = enrollmentWatcherArmed;
     disarmWatcher();
-    if (!isEngineRunning()) return wasWatching ? "Не запущено. Отслеживание принятых заданий выключено." : "Не запущено.";
+    if (!isEngineRunning()) return wasWatching ? "Очередь не запущена. Автосбор приостановлен, отслеживание заданий выключено." : "Очередь не запущена. Автосбор приостановлен.";
     stopOrion();
-    return wasWatching ? "Остановлено. Отслеживание принятых заданий выключено." : "Остановлено.";
+    return wasWatching ? "Остановлено. Автосбор приостановлен, отслеживание заданий выключено." : "Остановлено. Автосбор приостановлен.";
 }
 
 async function initializePlugin(generation: number): Promise<void> {
@@ -219,6 +222,7 @@ async function initializePlugin(generation: number): Promise<void> {
         if (!pluginActive || generation !== pluginLifecycleGeneration) return;
 
         armAccountWatcher();
+        initializeRewardClaims(getQuestStore(), getCurrentUserId);
         setWatchForEnrollmentsHook(enabled => {
             if (enabled) armWatcher();
             else disarmWatcher();
@@ -256,9 +260,9 @@ async function waitForPluginInitialization(): Promise<void> {
     }
 }
 
-async function ensureReadyStart(): Promise<string> {
+async function ensureReadyStart(selectedIds?: string[]): Promise<string> {
     await waitForPluginInitialization();
-    return ensureStart();
+    return ensureStart(selectedIds);
 }
 
 async function ensureReadyStop(): Promise<string> {
@@ -290,6 +294,7 @@ async function statusSummary(): Promise<string> {
     const store = getQuestStore();
     const stillUnclaimed = (e: { id: string; claimable?: boolean; }) => {
         if (!e.claimable) return false;
+        if (readRewardClaims().some(state => state.id === e.id && state.status === "CLAIMED")) return false;
         try {
             const q = store?.getQuest?.(e.id);
             return q ? !q.userStatus?.claimedAt : true;
@@ -332,7 +337,7 @@ async function statusSummary(): Promise<string> {
 
     const header = `Orion ${PLUGIN_VERSION} ${running ? "работает" : "остановлен"}, заданий: ${entries.length}; ${breakdown}`;
     const footer = claimable > 0
-        ? [`${claimable} наград ожидают получения. Откройте задания Discord и получите награды вручную. Автоматическая попытка может вызвать капчу.`]
+        ? [`Наград ожидают получения: ${claimable}. ${settings.store.tryToClaimReward ? "Автосбор включён; состояние видно в окне Orion." : "Нажмите «Забрать всё» в окне Orion или включите автосбор."}`]
         : [];
     // Orbs land on the account at claim time, so the total is what these tasks are worth and the
     // second half is how much of it sits unclaimed.
@@ -617,6 +622,7 @@ export default definePlugin({
     },
 
     stop() {
+        destroyRewardClaims();
         destroyDashboard();
         // Invalidate async initialization before teardown. Vencord does not await plugin start().
         pluginActive = false;

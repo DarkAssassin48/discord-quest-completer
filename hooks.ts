@@ -52,3 +52,13 @@ export function setWatchForEnrollmentsHook(fn: Handler<boolean> | null): void {
 export function fireWatchForEnrollmentsChanged(value: boolean): void {
     onWatchForEnrollments?.(value);
 }
+
+let onAutoClaim: Handler<boolean> | null = null;
+
+export function setAutoClaimHook(fn: Handler<boolean> | null): void {
+    onAutoClaim = fn;
+}
+
+export function fireAutoClaimChanged(value: boolean): void {
+    onAutoClaim?.(value);
+}

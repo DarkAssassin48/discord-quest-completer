@@ -16,6 +16,7 @@ export interface Quest {
         taskConfig?: TaskConfig;
         taskConfigV2?: TaskConfig;
         rewardsConfig?: {
+            expiresAt?: string;
             rewards?: Array<{
                 type?: number;
                 messages?: { name?: string; };
@@ -28,6 +29,7 @@ export interface Quest {
     };
     userStatus?: {
         completedAt?: string;
+        claimedAt?: string;
         dismissedAt?: string;
         enrolledAt?: string;
         progress?: Record<string, { value?: number; }>;

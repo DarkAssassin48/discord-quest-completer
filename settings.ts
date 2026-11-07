@@ -10,7 +10,7 @@
 import { definePluginSettings } from "@api/Settings";
 import { OptionType } from "@utils/types";
 
-import { fireAchievementBypassChanged, fireOrbQuestsOnlyChanged, fireWatchForEnrollmentsChanged } from "./hooks";
+import { fireAchievementBypassChanged, fireAutoClaimChanged, fireOrbQuestsOnlyChanged, fireWatchForEnrollmentsChanged } from "./hooks";
 
 export const settings = definePluginSettings({
     autoStart: {
@@ -53,9 +53,10 @@ export const settings = definePluginSettings({
 
     tryToClaimReward: {
         type: OptionType.BOOLEAN,
-        displayName: "Пытаться получать награды",
-        description: "Пытаться получать награду сразу после выполнения. Discord может запросить капчу — её нужно проходить вручную. По умолчанию выключено.",
+        displayName: "Автоматически забирать награды",
+        description: "Забирать все выполненные награды, включая задания прошлых запусков. Временные ошибки повторяются до четырёх попыток. Работает и после завершения очереди. Капча и подтверждения открываются в Discord вручную. Стоп приостанавливает автосбор до следующего запуска.",
         default: false,
+        onChange: (value: boolean) => fireAutoClaimChanged(value),
     },
 
     hideActivity: {

@@ -19,6 +19,7 @@ import { setAchievementBypassHook, setOrbQuestsOnlyHook } from "./hooks";
 import { Patcher } from "./patcher";
 import { questBlocker, recordOutcome, selectQuestTaskConfig, summarizeRun, summarizeSharedGameQuests, taskEntries } from "./questConfig";
 import { orbBalance, questOrbReward } from "./questRewards";
+import { notifyRewardCompleted } from "./rewardService";
 import { schedulerLaneForTaskType, schedulerMetadata, type SchedulerLane, type SchedulerSnapshot, type SchedulerTaskView } from "./schedulerMetadata";
 import { settings } from "./settings";
 import { TaskControlRegistry, type TaskLifecycle } from "./taskControl";
@@ -528,7 +529,6 @@ async function runConcurrent(
 async function onTaskComplete(
     runId: number,
     runRuntime: OrionRuntime,
-    runTasks: TaskRunner,
     q: Quest,
     t: TaskInfo,
 ): Promise<void> {
@@ -557,65 +557,10 @@ async function onTaskComplete(
         }
     } catch (e: any) { debug(logger, `[System] Notification: ${e?.message}`); }
 
-    if (settings.store.tryToClaimReward) {
-        try {
-            if (!await waitForControlledTaskDelay(runId, runRuntime, controlled, rnd(2500, 6000))) return;
-            const claimRes: any = await runTasks.claimReward(q.id);
-            if (!isTaskActive(runId, runRuntime, controlled)) return;
-            if (claimRes?.body?.claimed_at) {
-                logger.info(`[Claim] Reward for "${t.name}" claimed automatically!`);
-                emitCompanionEvent({
-                    code: COMPANION_EVENT_CODES.CLAIM_SUCCEEDED,
-                    category: "claim",
-                    level: "success",
-                    message: `Reward claimed automatically for "${t.name}".`,
-                    questId: q.id,
-                    questName: t.name,
-                    taskType: t.type,
-                });
-                setEntry(q.id, { name: t.name, type: t.type, cur: t.target, max: t.target, status: "CLAIMED" });
-                const claimedEntry = dashboard.get(q.id);
-                setTimeout(() => {
-                    if (dashboard.get(q.id) === claimedEntry) removeEntry(q.id);
-                }, 2000);
-                return;
-            }
-        } catch (e: any) {
-            if (!isTaskActive(runId, runRuntime, controlled)) return;
-            const needsCaptcha = e?.body?.captcha_key || e?.body?.captcha_sitekey;
-            if (needsCaptcha) {
-                const reason = "Captcha required; claim the reward in Discord's UI";
-                logger.warn(`[Claim] Captcha required for "${t.name}". Use Discord's UI button.`);
-                emitCompanionEvent({
-                    code: COMPANION_EVENT_CODES.CLAIM_ACTION_REQUIRED,
-                    category: "claim",
-                    level: "warning",
-                    message: `Reward claim for "${t.name}" requires user action in Discord.`,
-                    questId: q.id,
-                    questName: t.name,
-                    taskType: t.type,
-                    reason,
-                });
-            } else {
-                const reason = String(e?.body?.message ?? e?.message ?? "Claim request failed");
-                logger.error(`[Claim] Auto-claim failed for "${t.name}": ${reason}`);
-                emitCompanionEvent({
-                    code: COMPANION_EVENT_CODES.CLAIM_FAILED,
-                    category: "claim",
-                    level: "error",
-                    message: `Automatic reward claim failed for "${t.name}".`,
-                    questId: q.id,
-                    questName: t.name,
-                    taskType: t.type,
-                    reason,
-                    failure: failureFromError(e, true, retryableHttpStatus(e), reason),
-                });
-            }
-        }
-    }
 
     if (isTaskActive(runId, runRuntime, controlled)) {
         setEntry(q.id, { name: t.name, type: t.type, cur: t.target, max: t.target, status: "COMPLETED", claimable: true });
+        notifyRewardCompleted(q.id);
     }
 }
 
@@ -715,6 +660,7 @@ async function mainLoop(
     runTasks: TaskRunner,
     runTraffic: Traffic,
     runUserId: string,
+    selection?: Set<string>,
 ): Promise<void> {
     await awaitQuestList(runId, runRuntime, runStores);
 
@@ -773,7 +719,7 @@ async function mainLoop(
             }
 
             const all = getQuestsArray(runStores.QuestStore);
-            const active = runTasks.activeQuests(all);
+            const active = runTasks.activeQuests(all).filter(q => !selection || selection.has(q.id));
             const activeIds = new Set(active.map(q => q.id));
 
             for (const id of taskControls.prunePaused(activeIds)) {
@@ -1110,7 +1056,7 @@ async function mainLoop(
     }
 }
 
-export async function startOrion(): Promise<void> {
+export async function startOrion(selectedIds?: string[]): Promise<void> {
     if (RUNTIME.running) {
         logger.warn("Already running, ignoring start()");
         return;
@@ -1208,7 +1154,7 @@ export async function startOrion(): Promise<void> {
                     setEntry(id, info);
                 }
             },
-            onComplete: (q, t) => onTaskComplete(runId, runRuntime, runTasks, q, t),
+            onComplete: (q, t) => onTaskComplete(runId, runRuntime, q, t),
         }, taskLifecycle);
 
         stores = runStores;
@@ -1238,7 +1184,7 @@ export async function startOrion(): Promise<void> {
             }
         } catch (e: any) { debug(logger, `[System] Notification permission request failed: ${e?.message}`); }
 
-        await mainLoop(runId, runRuntime, runStores, runTasks, runTraffic, runUserId);
+        await mainLoop(runId, runRuntime, runStores, runTasks, runTraffic, runUserId, selectedIds ? new Set(selectedIds) : undefined);
     } catch (e: any) {
         if (activeRunId === runId && activeRuntime === runRuntime) {
             const reason = String(e?.message ?? e);
