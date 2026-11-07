@@ -5,7 +5,7 @@
 
     const CONFIG = {
         NAME: "Orion",
-        VERSION: "v4.11.5",
+        VERSION: "v4.11.5-ru.1",
         THEME: "#5865F2",             // discord blurple
         SUCCESS: "#3BA55C",
         WARN: "#faa61a",
@@ -96,22 +96,22 @@
                 ov.id = 'orion-consent';
                 ov.style.cssText = 'position:fixed;inset:0;z-index:1002;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);font-family:var(--font-primary);';
                 ov.innerHTML = `<div style="width:420px;max-width:92vw;background:var(--background-base-low);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-button-overlay);color:var(--text-default);overflow:hidden;">
-                    <div style="padding:14px 16px;background:var(--background-mod-muted);border-bottom:1px solid var(--border-subtle);font-weight:700;color:var(--text-strong);">Authorize application?</div>
+                    <div style="padding:14px 16px;background:var(--background-mod-muted);border-bottom:1px solid var(--border-subtle);font-weight:700;color:var(--text-strong);">Разрешить доступ приложению?</div>
                     <div style="padding:16px;font-size:13px;line-height:1.5;">
-                        <div>To complete this achievement quest, Orion needs to OAuth-authorize this app on your Discord account:</div>
+                        <div>Для обработки достижения Orion запрашивает OAuth-доступ этого приложения к вашей учётной записи Discord:</div>
                         <div id="oc-app" style="font-weight:700;color:var(--text-strong);margin:6px 0;"></div>
-                        <div style="color:var(--text-muted);">Scopes requested:</div>
+                        <div style="color:var(--text-muted);">Запрашиваемые разрешения:</div>
                         <ul id="oc-scopes" style="margin:4px 0 10px;padding-left:18px;color:var(--text-muted);"></ul>
-                        <div style="color:var(--text-feedback-warning);">The app's backend receives a real authorization code. Orion revokes the grant immediately after the quest is marked complete. Discord enforcement against quest automation can affect the whole account.</div>
+                        <div style="color:var(--text-feedback-warning);">Сервер приложения получит настоящий код авторизации. После завершения Orion отзовёт выданный им доступ. Ограничения Discord за автоматизацию могут затронуть весь аккаунт.</div>
                         <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:12px;color:var(--text-muted);">
-                            <input type="checkbox" id="oc-remember" class="native-cb"> Don't ask again for this app this session</label>
+                            <input type="checkbox" id="oc-remember" class="native-cb"> Не спрашивать повторно для этого приложения в текущем сеансе</label>
                     </div>
                     <div style="display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border-subtle);">
-                        <button id="oc-no" class="quest-pick-btn deselect" style="flex:1;">Cancel</button>
-                        <button id="oc-yes" class="quest-pick-btn start" style="flex:1;">Authorize</button>
+                        <button id="oc-no" class="quest-pick-btn deselect" style="flex:1;">Отмена</button>
+                        <button id="oc-yes" class="quest-pick-btn start" style="flex:1;">Разрешить</button>
                     </div></div>`;
                 document.body.appendChild(ov);
-                ov.querySelector('#oc-app').textContent = appName ? `${appName} (${appId})` : `App ${appId}`;
+                ov.querySelector('#oc-app').textContent = appName ? `${appName} (${appId})` : `Приложение ${appId}`;
                 const ul = ov.querySelector('#oc-scopes');
                 this.SCOPES.forEach(s => { const li = document.createElement('li'); li.textContent = s; ul.appendChild(li); });
                 let done = false;
@@ -590,16 +590,16 @@
             this.root.innerHTML = `
                 <div id="orion-head">
                     <span id="orion-title">${ICONS.BOLT} ${CONFIG.NAME}
-                        <span class="dev-credit">by syntt_</span>
+                        <span class="dev-credit">автор: syntt_</span>
                         <span style="opacity:0.6; font-size:10px; margin-left:4px; padding-top: 3px; font-weight:500;">${CONFIG.VERSION}</span>
                     </span>
                     <div id="orion-controls">
-                        <span class="ctrl-btn ctrl-stop" id="orion-stop" title="Stop script">${ICONS.STOP} STOP</span>
-                        <span class="ctrl-btn ctrl-hide" id="orion-close" title="Shift + .">HIDE</span>
-                        <span class="ctrl-btn ctrl-opts" id="orion-opts" title="Options">${ICONS.OPT}</span>
+                        <span class="ctrl-btn ctrl-stop" id="orion-stop" title="Остановить Orion">${ICONS.STOP} СТОП</span>
+                        <span class="ctrl-btn ctrl-hide" id="orion-close" title="Shift + .">СКРЫТЬ</span>
+                        <span class="ctrl-btn ctrl-opts" id="orion-opts" title="Настройки">${ICONS.OPT}</span>
                     </div>
                 </div>
-                <div id="orion-body"><div style="text-align:center; padding:30px; color:var(--text-muted); font-size:12px; font-weight:500;">Initializing System...</div></div>
+                <div id="orion-body"><div style="text-align:center; padding:30px; color:var(--text-muted); font-size:12px; font-weight:500;">Подготовка Orion…</div></div>
                 <div id="orion-logs"></div>
             `;
             document.body.appendChild(this.root);
@@ -656,7 +656,7 @@
                     const taskData = this.tasks.get(questId);
                     if (!taskData) return;
 
-                    btn.innerText = "WAITING...";
+                    btn.innerText = "ОЖИДАНИЕ…";
                     btn.disabled = true;
                     btn.style.opacity = "0.5";
 
@@ -667,7 +667,7 @@
                         const claimRes = await Tasks.claimReward(questId);
 
                         if (claimRes?.body?.claimed_at) {
-                            btn.innerText = "CLAIMED!";
+                            btn.innerText = "ПОЛУЧЕНО!";
                             this.log(`[Claim] Reward for "${taskData.name}" claimed successfully!`, 'success');
 
                             this.updateTask(questId, { ...taskData, status: "CLAIMED", claimable: false, claimState: null });
@@ -845,7 +845,7 @@
             if (document.getElementById('orion-picker-form')) return;
             const body = document.getElementById('orion-body');
             if (!body) return;
-            if (!this.tasks.size) return body.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:13px;">Waiting for tasks...</div>`;
+            if (!this.tasks.size) return body.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:13px;">Ожидание заданий…</div>`;
 
             const sorted = [...this.tasks.entries()].sort((a, b) => {
                 const ta = a[1], tb = b[1];
@@ -875,21 +875,21 @@
                     ICONS.BOLT;
 
                 let statusText = t.status === 'CLAIMED' ? 'CLAIMED' : t.done ? 'COMPLETED' : t.status;
-                let progressLabel = t.pending ? 'In Queue' : t.failed ? 'Aborted' : 'Progress';
-                const unit = t.type === 'ACHIEVEMENT' ? '' : 's';
+                let progressLabel = t.pending ? 'В очереди' : t.failed ? 'Прервано' : 'Прогресс';
+                const unit = t.type === 'ACHIEVEMENT' ? '' : ' с';
 
                 let actionBtn = '';
 
                 if (t.claimable) {
-                    if (t.claimState === 'WAITING') actionBtn = `<button class="claim-btn" disabled>WAITING...</button>`;
-                    else if (t.claimState === 'FAILED') actionBtn = `<button class="claim-btn failed" disabled>ACTION REQUIRED</button>`;
-                    else actionBtn = `<button class="claim-btn" data-id="${esc(id)}">CLAIM REWARD</button>`;
+                    if (t.claimState === 'WAITING') actionBtn = `<button class="claim-btn" disabled>ОЖИДАНИЕ…</button>`;
+                    else if (t.claimState === 'FAILED') actionBtn = `<button class="claim-btn failed" disabled>НУЖНО ДЕЙСТВИЕ</button>`;
+                    else actionBtn = `<button class="claim-btn" data-id="${esc(id)}">ПОЛУЧИТЬ НАГРАДУ</button>`;
                 } else if (t.actionRequired === 'ENROLL') {
-                    statusText = 'ACTION REQUIRED'; progressLabel = 'Accept quest in Discord';
-                    actionBtn = `<button class="goto-btn">GO TO QUESTS</button>`;
+                    statusText = 'ACTION REQUIRED'; progressLabel = 'Примите задание в Discord';
+                    actionBtn = `<button class="goto-btn">ОТКРЫТЬ ЗАДАНИЯ</button>`;
                 } else if (t.type === 'ACHIEVEMENT' && t.status === 'RUNNING') {
-                    statusText = 'ACTION REQUIRED'; progressLabel = 'Please, complete manually';
-                    actionBtn = `<button class="goto-btn">GO TO QUESTS</button>`;
+                    statusText = 'ACTION REQUIRED'; progressLabel = 'Выполните вручную';
+                    actionBtn = `<button class="goto-btn">ОТКРЫТЬ ЗАДАНИЯ</button>`;
                 }
 
                 const stateClass = t.done ? 'done' : t.failed ? 'failed' : t.pending ? 'pending' : 'running';
@@ -911,7 +911,7 @@
                         ${stateClass === 'running' ? `<div class="task-icon-overlay">${Math.floor(pct)}%</div>` : ''}
                     </div>
                     <div class="task-info">
-                        <div class="task-status">${statusText}</div>
+                        <div class="task-status">${({RUNNING:"ВЫПОЛНЯЕТСЯ",QUEUE:"В ОЧЕРЕДИ",PAUSED:"НА ПАУЗЕ",PENDING:"ОЖИДАНИЕ",COMPLETED:"ВЫПОЛНЕНО",FAILED:"ОШИБКА",CLAIMED:"ПОЛУЧЕНО",STOPPED:"ОСТАНОВЛЕНО","ACTION REQUIRED":"НУЖНО ДЕЙСТВИЕ"})[statusText] || statusText}</div>
                         <div class="task-name" title="${esc(t.name)}">${esc(t.name)}</div>
                         ${taskMetaHtml}
                     </div>
@@ -941,8 +941,8 @@
                 // the same side of the payout.
                 const boosted = canUseMoreQuestOrbs();
 
-                const REWARD_META = { 1: { label: "IN-GAME", color: "#e67e22" }, 3: { label: "AVATAR DECORATION", color: "#a358f2" }, 4: { label: "ORBS", color: "#5865F2" } };
-                const REWARD_FALLBACK = { label: "OTHER", color: "#949ba4" };
+                const REWARD_META = { 1: { label: "В ИГРЕ", color: "#e67e22" }, 3: { label: "УКРАШЕНИЕ АВАТАРА", color: "#a358f2" }, 4: { label: "ORBS", color: "#5865F2" } };
+                const REWARD_FALLBACK = { label: "ДРУГОЕ", color: "#949ba4" };
 
                 quests.forEach(q => {
                     const cfg = selectTaskConfig(q.config);
@@ -961,7 +961,7 @@
                     // every entry for the payout line; the filter was the one place still reading
                     // the first. It also has to agree with the plugin's Orb-only setting.
                     const rewardType = orbs ? 4 : (rw?.type ?? 0);
-                    const rewardText = rw?.messages?.name ?? "Unknown Reward";
+                    const rewardText = rw?.messages?.name ?? "Награда не указана";
 
                     const meta = REWARD_META[rewardType] ?? REWARD_FALLBACK;
 
@@ -975,7 +975,7 @@
 
                     items.push({
                         id: q.id,
-                        name: q.config?.messages?.questName ?? "Unknown Quest",
+                        name: q.config?.messages?.questName ?? "Задание Discord",
                         type: displayType,
                         rewardType,
                         rewardText,
@@ -993,7 +993,7 @@
                         <div class="task-info">
                             <div class="task-name" title="${esc(q.name)}">${esc(q.name)}</div>
                             <div class="task-meta" style="justify-content: flex-start; gap: 8px;">
-                                <span style="text-transform: uppercase; color: var(--text-subtle);">${esc(q.type)}</span>
+                                <span style="text-transform: uppercase; color: var(--text-subtle);">${esc(({GAME:"Игра",STREAM:"Трансляция",VIDEO:"Видео",WATCH_VIDEO:"Видео",VIDEO:"Видео",ACTIVITY:"Активность",ACHIEVEMENT:"Достижение"})[q.type] || q.type)}</span>
                                 <span style="color: ${q.color};">${esc(q.orbText || q.rewardText)}</span>
                             </div>
                         </div>
@@ -1009,37 +1009,37 @@
                     <form id="orion-picker-form">
                         <div id="orion-options-panel" style="display:none;">
                             ${rewardTypes.size > 1 ? `
-                                <div class="picker-section-title">Filter By Reward</div>
+                                <div class="picker-section-title">Награды</div>
                                 <div class="reward-filters">
                                     ${[...rewardTypes.values()].map(rt => `<button type="button" class="reward-filter" data-rt="${rt.type}" style="color: ${rt.color}; border-color: ${rt.color};">${rt.label} (${rt.count})</button>`).join('')}
                                 </div>
                             ` : ''}
                             ${questTypes.size > 1 ? `
-                                <div class="picker-section-title">Filter By Type</div>
+                                <div class="picker-section-title">Типы заданий</div>
                                 <div class="reward-filters">
-                                    ${[...questTypes].map(t => `<button type="button" class="type-filter" data-qt="${t}">${t}</button>`).join('')}
+                                    ${[...questTypes].map(t => `<button type="button" class="type-filter" data-qt="${t}">${({GAME:"Игра",STREAM:"Трансляция",WATCH_VIDEO:"Видео",VIDEO:"Видео",ACTIVITY:"Активность",ACHIEVEMENT:"Достижение"})[t] || t}</button>`).join('')}
                                 </div>
                             ` : ''}
-                            <div class="picker-section-title">Options</div>
+                            <div class="picker-section-title">Настройки</div>
                             <div class="picker-options">
-                                ${buildToggle('autoEnroll', 'Auto-enroll in quests', RUNTIME.autoEnroll)}
-                                ${buildToggle('autoClaim', 'Auto-claim rewards', RUNTIME.autoClaim)}
-                                ${buildToggle('playSound', 'Sound on completion', RUNTIME.playSound)}
-                                ${buildToggle('randomDelay', 'Random 1-30min delay between cycles', RUNTIME.randomDelay)}
+                                ${buildToggle('autoEnroll', 'Автоматически принимать задания', RUNTIME.autoEnroll)}
+                                ${buildToggle('autoClaim', 'Пытаться получать награды', RUNTIME.autoClaim)}
+                                ${buildToggle('playSound', 'Звук завершения', RUNTIME.playSound)}
+                                ${buildToggle('randomDelay', 'Случайная пауза 1–30 минут между циклами', RUNTIME.randomDelay)}
                             </div>
                         </div>
 
                         <div id="orion-quest-list" class="picker-quest-list">${items.map(buildCard).join('')}
                             <div id="orion-no-quests" style="display: none; margin: auto; text-align: center; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                                No quests available
+                                Нет доступных заданий
                             </div>
                         </div>
 
                         <div id="orion-orb-total" class="orb-total"></div>
 
                         <div class="picker-actions">
-                            <button type="button" class="quest-pick-btn deselect" id="select-all-btn">DESELECT ALL</button>
-                            <button type="submit" class="quest-pick-btn start" id="start-btn">${ICONS.BOLT} <span id="start-btn-text">START (${items.length})</span></button>
+                            <button type="button" class="quest-pick-btn deselect" id="select-all-btn">СНЯТЬ ВЫБОР</button>
+                            <button type="submit" class="quest-pick-btn start" id="start-btn">${ICONS.BOLT} <span id="start-btn-text">ЗАПУСТИТЬ (${items.length})</span></button>
                         </div>
                     </form>`;
 
@@ -1063,22 +1063,22 @@
                     if (orbTotal) {
                         const picked = visibleCbs.filter(cb => cb.checked).map(cb => cb.closest('.quest-pick'));
                         const orbs = picked.reduce((total, el) => total + (Number(el?.getAttribute('data-orbs')) || 0), 0);
-                        const selectedText = orbs > 0 ? `${orbs} Orbs selected` : '';
+                        const selectedText = orbs > 0 ? `${orbs} Orbs выбрано` : '';
                         const text = [selectedText, balanceText].filter(Boolean).join(' · ');
                         orbTotal.textContent = text;
                         orbTotal.style.display = text ? 'block' : 'none';
                     }
 
                     const startBtnText = document.getElementById('start-btn-text');
-                    if (startBtnText) startBtnText.textContent = `START (${totalChecked})`;
+                    if (startBtnText) startBtnText.textContent = `ЗАПУСТИТЬ (${totalChecked})`;
                     startBtn.disabled = totalChecked === 0;
 
                     if (visibleCbs.length === 0) {
                         selectAllBtn.disabled = true;
-                        selectAllBtn.textContent = 'SELECT ALL';
+                        selectAllBtn.textContent = 'ВЫБРАТЬ ВСЕ';
                     } else {
                         selectAllBtn.disabled = false;
-                        selectAllBtn.textContent = visibleCbs.every(cb => cb.checked) ? 'DESELECT ALL' : 'SELECT ALL';
+                        selectAllBtn.textContent = visibleCbs.every(cb => cb.checked) ? 'СНЯТЬ ВЫБОР' : 'ВЫБРАТЬ ВСЕ';
                     }
 
                     const noQuestsMsg = document.getElementById('orion-no-quests');
@@ -2795,7 +2795,7 @@
                         const tInfo = {
                             id: q.id,
                             appId: appId ?? 0,
-                            name: q.config?.messages?.questName ?? "Unknown Quest",
+                            name: q.config?.messages?.questName ?? "Задание Discord",
                             target,
                             type,
                             keyName  // actual task key from config (e.g. WATCH_VIDEO_ON_MOBILE)

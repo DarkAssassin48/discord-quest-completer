@@ -15,60 +15,60 @@ import { fireAchievementBypassChanged, fireOrbQuestsOnlyChanged, fireWatchForEnr
 export const settings = definePluginSettings({
     autoStart: {
         type: OptionType.BOOLEAN,
-        description:
-            "Start the engine automatically when the plugin loads. Otherwise use the /orion start slash command.",
+        displayName: "Автозапуск",
+        description: "Запускать Orion вместе с Discord. Если выключено, запуск выполняется кнопкой в панели Orion.",
         default: false,
     },
 
     autoEnroll: {
         type: OptionType.BOOLEAN,
-        description:
-            "Accept quests for you before running them. Turn it off to run only the quests you accepted yourself in Discord's Quests page: anything you haven't accepted is left untouched and listed as PENDING in /orion status, and it starts on the next cycle the moment you accept it, without restarting the engine.",
+        displayName: "Автопринятие заданий",
+        description: "Принимать доступные задания автоматически. Если выключено, обрабатываются только задания, которые вы приняли в Discord вручную.",
         default: true,
     },
 
     orbQuestsOnly: {
         type: OptionType.BOOLEAN,
-        description:
-            "Run only quests that pay Orbs. Every other quest is left alone for the run: not accepted, not started, and not counted as a failure. A quest counts when any of its rewards carries Orbs, not only the first one, since Discord can list an in-game item ahead of the Orbs. Quests already running when you turn this on are allowed to finish. Turning it off mid-run puts the quests it left out back in on the next cycle.",
+        displayName: "Только задания за Orbs",
+        description: "Обрабатывать только задания, среди наград которых есть Orbs. Прочие задания не принимаются и не запускаются. Уже запущенные задания завершаются.",
         default: false,
         onChange: (value: boolean) => fireOrbQuestsOnlyChanged(value),
     },
 
     watchForEnrollments: {
         type: OptionType.BOOLEAN,
-        description:
-            "Watch Discord's quest list while the engine is idle and start it on its own when you accept a quest, instead of you running /orion start. The engine can then start while you are away from the keyboard, which is a change in exposure under Discord's quest-automation enforcement rather than only a convenience: turning it on is your explicit consent to that. /orion stop disarms the watcher until the next /orion start, and disabling the plugin removes it entirely. Note it does not narrow what a run picks up: with auto-enroll also on, accepting one quest wakes the engine and it then enrolls you in every other available quest, so pair this with auto-enroll off if you want only the quests you accepted yourself.",
+        displayName: "Следить за принятыми заданиями",
+        description: "Запускать очередь после принятия задания в Discord. Если одновременно включено автопринятие, очередь может принять и другие задания. Стоп выключает слежение до следующего запуска. Автоматизация может привести к ограничениям Discord.",
         default: false,
         onChange: (value: boolean) => fireWatchForEnrollmentsChanged(value),
     },
 
     achievementBypass: {
         type: OptionType.BOOLEAN,
-        description:
-            "Auto-complete ACHIEVEMENT_IN_ACTIVITY quests by OAuth-authorizing the quest's app on your account (scopes: identify, applications.commands, applications.entitlements), reporting progress to the activity backend, then revoking the grant right after. This automates your logged-in account and can put the WHOLE account at risk under Discord's quest-automation enforcement. Off by default: turning it on is your explicit consent. Turning it on mid-run puts back any quest that was skipped only because it was off.",
+        displayName: "Обработка достижений активности",
+        description: "Разрешить Orion авторизовать приложение задания через OAuth и сообщать прогресс серверу активности. Это автоматизация действий учётной записи: Discord может ограничить задания или аккаунт. По умолчанию выключено. Включайте только осознанно.",
         default: false,
         onChange: (value: boolean) => fireAchievementBypassChanged(value),
     },
 
     tryToClaimReward: {
         type: OptionType.BOOLEAN,
-        description:
-            "Try to auto-claim rewards immediately on completion. May trigger a captcha, so disable it if you'd rather click CLAIM in Discord's Quests page manually.",
+        displayName: "Пытаться получать награды",
+        description: "Пытаться получать награду сразу после выполнения. Discord может запросить капчу — её нужно проходить вручную. По умолчанию выключено.",
         default: false,
     },
 
     hideActivity: {
         type: OptionType.BOOLEAN,
-        description:
-            "Suppress 'Playing ...' status from your friends list while game quests are running. Turns Discord's own 'Display current activity as a status message' off for the duration and restores it afterwards. The store spoof alone is what Discord builds the status from, so nothing less hides it. Takes effect immediately, including on a quest already in progress.",
+        displayName: "Скрывать игровую активность",
+        description: "На время обработки игровых заданий выключать показ текущей игры и восстанавливать прежнюю настройку после остановки. Изменение применяется и к текущему заданию.",
         default: false,
     },
 
     playSessionTail: {
         type: OptionType.SLIDER,
-        description:
-            "Minutes to keep a game quest's spoofed process running after the quest completes, picked at random between 40% and 100% of this value each time. Without it the fake session ends on the exact heartbeat that crossed the quest's requirement, so its length is always precisely the requirement, on every quest. Real play overshoots by a different amount every time, and r/DiscordQuests' suspension megathread reports that finishing at exactly the quest duration is among the patterns being flagged, though nobody outside Discord has measured what its detector actually weighs. Costs no extra requests: Discord ends the quest heartbeat itself the moment it sees the completion, so this only extends the 'Playing ...' presence. Set to 0 to drop the process immediately. Stop releases it at once either way.",
+        displayName: "Продолжительность активности после завершения",
+        description: "Сколько минут сохранять игровую активность после завершения задания. Ноль — завершать сразу. Стоп прекращает её в любом случае. Эта настройка не гарантирует защиты от обнаружения автоматизации.",
         markers: [0, 1, 2, 3, 5, 8],
         stickToMarkers: true,
         default: 2,
@@ -76,8 +76,8 @@ export const settings = definePluginSettings({
 
     gameConcurrency: {
         type: OptionType.SLIDER,
-        description:
-            "Parallel game quests. Values above 1 risk detection, so keep it at 1 unless you know what you're doing. Read when a cycle starts, so a change applies to the next batch rather than to tasks already in flight.",
+        displayName: "Игровые задания одновременно",
+        description: "Число параллельных игровых заданий. Рекомендуемое исходным проектом значение — 1. Изменение применяется к следующей группе заданий.",
         markers: [1, 2, 3],
         stickToMarkers: true,
         default: 1,
@@ -85,8 +85,8 @@ export const settings = definePluginSettings({
 
     videoConcurrency: {
         type: OptionType.SLIDER,
-        description:
-            "Parallel video quests. Higher values finish faster but make more API calls. Read when a cycle starts, so a change applies to the next batch rather than to tasks already in flight.",
+        displayName: "Видеозадания одновременно",
+        description: "Число параллельных видеозаданий. Большие значения увеличивают число запросов. Применяется к следующей группе заданий.",
         markers: [1, 2, 3, 4],
         stickToMarkers: true,
         default: 2,
@@ -94,15 +94,15 @@ export const settings = definePluginSettings({
 
     playSound: {
         type: OptionType.BOOLEAN,
-        description:
-            "Play a soft tone after each quest completes and a 3-note arpeggio when the whole queue finishes. Useful when running with auto-claim off so you can come back to claim before the captcha times out.",
+        displayName: "Звуки завершения",
+        description: "Проигрывать звук после завершения задания и всей очереди.",
         default: false,
     },
 
     verboseLogging: {
         type: OptionType.BOOLEAN,
-        description:
-            "Raise Orion's debug messages to info level so they show in the console without switching it to Verbose (useful for troubleshooting Discord changes).",
+        displayName: "Подробный журнал",
+        description: "Показывать диагностические сообщения Orion в консоли. Удобно при изменениях интерфейса Discord.",
         default: false,
     },
 });

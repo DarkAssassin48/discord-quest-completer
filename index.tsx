@@ -9,8 +9,10 @@
 
 import { ApplicationCommandInputType, ApplicationCommandOptionType, sendBotMessage } from "@api/Commands";
 import definePlugin from "@utils/types";
+import { NavigationRouter } from "@webpack/common";
 
 import { subscribeCompanionEvents, type CompanionEventListener } from "./companionEvents";
+import { destroyDashboard, hideDashboard, initializeDashboard, renderToolbarButton, showDashboard, toggleDashboard } from "./dashboard";
 import { setWatchForEnrollmentsHook } from "./hooks";
 import {
     canUseMoreQuestOrbs,
@@ -37,13 +39,14 @@ import { formatOrbBalance, formatOrbReward, questOrbReward, totalOrbReward, type
 import { resolveQuestTarget } from "./questTarget";
 import type { SchedulerSnapshot } from "./schedulerMetadata";
 import { settings } from "./settings";
+import { outcomeTextRu, statusRu } from "./uiRu";
 
 /**
  * Mirrors index.js CONFIG.VERSION. The plugin carried no version at all, so a bug report could
  * not say which build it came from and neither could the person triaging it (issue #66).
  * tools/package-release.ps1 refuses to package if this and the userscript disagree.
  */
-export const PLUGIN_VERSION = "v4.11.5";
+export const PLUGIN_VERSION = "v4.11.5-ru.1";
 
 
 /*
@@ -174,14 +177,14 @@ async function ensureStart(): Promise<string> {
     // Re-arm even if the engine is already running. A start after an explicit stop restores the
     // watcher lifetime requested by the setting.
     armWatcher();
-    if (isEngineRunning()) return "Already running.";
+    if (isEngineRunning()) return "Уже запущено.";
     // startOrion() resolves when the whole run is over, so it is normally left unawaited: a run
     // lasts as long as its quests do. A run with nothing to do is the exception, and answering
-    // "Started." for that leaves someone looking at a command that appears to have done nothing
+    // "Запущено." for that leaves someone looking at a command that appears to have done nothing
     // (issue #66). Race the run against a short deadline: an empty run loses the race almost
     // immediately and its reason is reported, while a real run just costs the deadline once.
     //
-    // The deadline is needed. Checking once after the call was tried and it reports "Started."
+    // The deadline is needed. Checking once after the call was tried and it reports "Запущено."
     // for an empty run about as often as not, because the first scan is not reliably finished by
     // then. Polling until the engine stops was also tried and cost 2.2s on every healthy start,
     // since a healthy start is exactly the case that never exits the poll early.
@@ -194,18 +197,18 @@ async function ensureStart(): Promise<string> {
     if (endedImmediately) {
         const outcome = getLastRunOutcome();
         return outcome
-            ? `Started, then stopped straight away: ${outcome}`
-            : "Started, then stopped straight away. The console says why.";
+            ? `Запуск сразу завершился: ${outcomeTextRu(outcome)}`
+            : "Запуск сразу завершился. Причина указана в журнале.";
     }
-    return "Started.";
+    return "Запущено.";
 }
 
 function ensureStop(): string {
     const wasWatching = enrollmentWatcherArmed;
     disarmWatcher();
-    if (!isEngineRunning()) return wasWatching ? "Not running. Stopped watching for accepted quests." : "Not running.";
+    if (!isEngineRunning()) return wasWatching ? "Не запущено. Отслеживание принятых заданий выключено." : "Не запущено.";
     stopOrion();
-    return wasWatching ? "Stopped, and no longer watching for accepted quests." : "Stopped.";
+    return wasWatching ? "Остановлено. Отслеживание принятых заданий выключено." : "Остановлено.";
 }
 
 async function initializePlugin(generation: number): Promise<void> {
@@ -271,17 +274,17 @@ async function statusSummary(): Promise<string> {
     if (!running && entries.length === 0) {
         const outcome = getLastRunOutcome();
         const idle = outcome
-            ? `Orion ${PLUGIN_VERSION} idle: ${outcome}\nUse \`/orion start\` to try again.`
-            : `Orion ${PLUGIN_VERSION} idle. Use \`/orion start\` to begin.`;
+            ? `Orion ${PLUGIN_VERSION} — ожидание: ${outcomeTextRu(outcome)}\nПовторный запуск: \`/orion start\`.`
+            : `Orion ${PLUGIN_VERSION} — ожидание. Для запуска: \`/orion start\`.`;
         return `${idle}\n${await balanceLine()}`;
     }
-    if (entries.length === 0) return `${running ? "Running. No active tasks yet." : "Idle."}\n${await balanceLine()}`;
+    if (entries.length === 0) return `${running ? "Orion работает. Активных заданий пока нет." : "Ожидание."}\n${await balanceLine()}`;
 
     const tally = new Map<string, number>();
     for (const e of entries) tally.set(e.status, (tally.get(e.status) ?? 0) + 1);
     const breakdown = [...tally.entries()]
         .sort((a, b) => b[1] - a[1])
-        .map(([status, n]) => `${n} ${status.toLowerCase()}`)
+        .map(([status, n]) => `${n} ${statusRu[status] ?? status}`)
         .join(", ");
 
     const store = getQuestStore();
@@ -317,24 +320,24 @@ async function statusSummary(): Promise<string> {
         const orbs = formatOrbReward(orbsById.get(e.id) ?? null, boosted);
         const payout = orbs ? ` [${orbs}]` : "";
         const waiting = e.actionRequired === "ENROLL"
-            ? ", waiting for you to accept it in Discord's Quests page"
+            ? ", ожидает принятия в разделе заданий Discord"
             : "";
         const why = e.status === "FAILED" && e.reason ? `, ${e.reason}` : "";
-        const reward = stillUnclaimed(e) ? ", reward not claimed yet" : "";
-        return `• ${e.name}: ${e.status} (${pct}%)${payout}${waiting}${why}${reward}`;
+        const reward = stillUnclaimed(e) ? ", награда ещё не получена" : "";
+        return `• ${e.name}: ${statusRu[e.status] ?? e.status} (${pct}%)${payout}${waiting}${why}${reward}`;
     });
 
     const orbTotal = totalOrbReward([...orbsById.values()]);
     const orbsWaiting = totalOrbReward(entries.filter(stillUnclaimed).map(e => orbsById.get(e.id) ?? null));
 
-    const header = `Orion ${PLUGIN_VERSION} ${running ? "running" : "stopped"}, ${entries.length} task(s): ${breakdown}`;
+    const header = `Orion ${PLUGIN_VERSION} ${running ? "работает" : "остановлен"}, заданий: ${entries.length}; ${breakdown}`;
     const footer = claimable > 0
-        ? [`${claimable} reward(s) waiting. Claim them on Discord's Quests page, or turn on "Try to claim reward" to have Orion attempt it (claiming often triggers a captcha).`]
+        ? [`${claimable} наград ожидают получения. Откройте задания Discord и получите награды вручную. Автоматическая попытка может вызвать капчу.`]
         : [];
     // Orbs land on the account at claim time, so the total is what these tasks are worth and the
     // second half is how much of it sits unclaimed.
     const orbLine = orbTotal
-        ? [`Orbs: ${formatOrbReward(orbTotal, boosted)} across these task(s)${orbsWaiting ? `, ${formatOrbReward(orbsWaiting, boosted)} of it still to claim` : ""}.`]
+        ? [`Orbs: ${formatOrbReward(orbTotal, boosted)} за эти задания${orbsWaiting ? `, ${formatOrbReward(orbsWaiting, boosted)} ещё не получено` : ""}.`]
         : [];
     return [header, ...lines, ...orbLine, await balanceLine(), ...footer].join("\n");
 }
@@ -344,15 +347,15 @@ async function statusSummary(): Promise<string> {
 async function balanceLine(): Promise<string> {
     try {
         const balance = formatOrbBalance(await readOrbBalance());
-        return balance ? `Balance: ${balance} on the account.` : "Balance: unavailable, Discord sent no number.";
+        return balance ? `Баланс: ${balance} на учётной записи.` : "Баланс недоступен: Discord не сообщил значение.";
     } catch (error) {
-        return `Balance: unavailable, ${error instanceof Error ? error.message : String(error)}.`;
+        return `Баланс недоступен: ${error instanceof Error ? error.message : String(error)}.`;
     }
 }
 
 function formatCandidates(names: string[]): string {
     const shown = names.slice(0, 6);
-    const suffix = names.length > shown.length ? `, +${names.length - shown.length} more` : "";
+    const suffix = names.length > shown.length ? `, +${names.length - shown.length} ещё` : "";
     return `${shown.map(name => `"${name}"`).join(", ")}${suffix}`;
 }
 
@@ -365,44 +368,44 @@ function resolveCommandQuest(rawTarget: string, status: "pause" | "resume"): { i
     const resolution = resolveQuestTarget(rawTarget, candidates);
     if (resolution.kind === "match") return resolution.candidate;
     if (resolution.kind === "ambiguous") {
-        return `Quest target is ambiguous. Matches: ${formatCandidates(resolution.candidates.map(candidate => candidate.name))}.`;
+        return `Название неоднозначно. Найдены: ${formatCandidates(resolution.candidates.map(candidate => candidate.name))}.`;
     }
 
     if (candidates.length === 0) {
-        return status === "pause" ? "No queued or running quests can be paused." : "No paused quests can be resumed.";
+        return status === "pause" ? "Нет заданий, которые можно приостановить." : "Нет заданий на паузе.";
     }
-    return `No ${status === "pause" ? "queued/running" : "paused"} quest matched "${rawTarget}". Current candidates: ${formatCandidates(candidates.map(candidate => candidate.name))}.`;
+    return `Задание «${rawTarget}» ${status === "pause" ? "среди выполняющихся и ожидающих" : "среди приостановленных"} не найдено. Доступны: ${formatCandidates(candidates.map(candidate => candidate.name))}.`;
 }
 
 function ensurePause(rawTarget?: string): string {
     if (!rawTarget?.trim()) {
         const result = pauseAllQuests();
-        if (result.changed === 0) return "No queued or running quests to pause.";
-        const warning = result.cleanupFailures > 0 ? ` ${result.cleanupFailures} cleanup(s) threw; see the console.` : "";
-        return `Paused ${result.changed} quest(s).${warning}`;
+        if (result.changed === 0) return "Нет заданий для паузы.";
+        const warning = result.cleanupFailures > 0 ? ` ${result.cleanupFailures} ошибок очистки; подробности в консоли.` : "";
+        return `Приостановлено заданий: ${result.changed}.${warning}`;
     }
 
     const target = resolveCommandQuest(rawTarget, "pause");
     if (typeof target === "string") return target;
 
     const result = pauseQuest(target.id);
-    if (!result.changed) return `"${target.name}" is no longer queued or running.`;
-    const warning = result.cleanupFailures > 0 ? ` ${result.cleanupFailures} cleanup(s) threw; see the console.` : "";
-    return `Paused "${target.name}".${warning}`;
+    if (!result.changed) return `"${target.name}" больше не выполняется и не стоит в очереди.`;
+    const warning = result.cleanupFailures > 0 ? ` ${result.cleanupFailures} ошибок очистки; подробности в консоли.` : "";
+    return `Приостановлено «${target.name}».${warning}`;
 }
 
 function ensureResume(rawTarget?: string): string {
     if (!rawTarget?.trim()) {
         const changed = resumeAllQuests();
-        return changed > 0 ? `Resumed ${changed} quest(s); they are eligible again on the next cycle.` : "No paused quests to resume.";
+        return changed > 0 ? `Возобновлено заданий: ${changed}. Продолжение — на следующем цикле.` : "Нет заданий для продолжения.";
     }
 
     const target = resolveCommandQuest(rawTarget, "resume");
     if (typeof target === "string") return target;
 
     return resumeQuest(target.id)
-        ? `Resumed "${target.name}"; it is eligible again on the next cycle.`
-        : `"${target.name}" is no longer paused.`;
+        ? `Возобновлено «${target.name}» — продолжится на следующем цикле.`
+        : `"${target.name}" больше не находится на паузе.`;
 }
 
 async function ensureReadyPause(rawTarget?: string): Promise<string> {
@@ -441,27 +444,27 @@ function companionSnapshot(): CompanionControlSnapshot {
 async function controlQuestById(questId: string, action: "pause" | "resume"): Promise<string> {
     await waitForPluginInitialization();
     const id = questId.trim();
-    if (!id) throw new Error("Quest id is required.");
+    if (!id) throw new Error("Нужен ID задания.");
 
     const entry = readDashboard().find(candidate => candidate.id === id);
     const name = entry?.name ?? id;
 
     if (action === "pause") {
         const result = pauseQuest(id);
-        if (!result.changed) return `"${name}" is no longer queued or running.`;
-        const warning = result.cleanupFailures > 0 ? ` ${result.cleanupFailures} cleanup(s) threw; see the console.` : "";
-        return `Paused "${name}".${warning}`;
+        if (!result.changed) return `"${name}" больше не выполняется и не стоит в очереди.`;
+        const warning = result.cleanupFailures > 0 ? ` ${result.cleanupFailures} ошибок очистки; подробности в консоли.` : "";
+        return `Приостановлено «${name}».${warning}`;
     }
 
     return resumeQuest(id)
-        ? `Resumed "${name}"; it is eligible again on the next cycle.`
-        : `"${name}" is no longer paused.`;
+        ? `Возобновлено «${name}" — продолжится на следующем цикле.`
+        : `"${name}" больше не находится на паузе.`;
 }
 
 export default definePlugin({
     name: "OrionQuests",
     description:
-        "Auto-completes Discord Quests: game, video, stream, activity, and achievement.",
+        "Панель заданий Orion: окно прогресса, управление очередью и кнопка в верхней панели Discord.",
     // version sits below description because UserpluginInstaller reads plugin metadata with a
     // regex that only tolerates whitespace and comments between name and description. Any key in
     // that gap makes the match fail, and the plugin then never appears in its UserPlugins tab,
@@ -470,6 +473,18 @@ export default definePlugin({
     authors: [{ name: "syntt_", id: 1419678867005767783n }],
     dependencies: ["UserSettingsAPI"],
     settings,
+
+    patches: [{
+        find: '?"BACK_FORWARD_NAVIGATION":',
+        replacement: {
+            match: /(trailing:.{0,80}?children:\[)/,
+            replace: "$1$self.renderToolbarButton(),"
+        }
+    }],
+
+    renderToolbarButton,
+    showDashboard,
+    toggleDashboard,
 
     // The QuestStore handler for this Flux event is the same semantic success path Discord's
     // own enroll action dispatches. Generic store changes are deliberately not treated as enrolls.
@@ -537,25 +552,25 @@ export default definePlugin({
     commands: [
         {
             name: "orion",
-            description: "Control the OrionQuests engine",
+            description: "Управление Orion",
             inputType: ApplicationCommandInputType.BUILT_IN,
             options: [
                 {
                     name: "action",
-                    description: "Action to perform",
+                    description: "Выберите действие",
                     type: ApplicationCommandOptionType.STRING,
                     required: true,
                     choices: [
-                        { name: "start", value: "start", label: "Start the engine" },
-                        { name: "stop", value: "stop", label: "Stop the engine" },
-                        { name: "status", value: "status", label: "Show running tasks" },
-                        { name: "pause", value: "pause", label: "Pause one quest, or all when quest is omitted" },
-                        { name: "resume", value: "resume", label: "Resume one quest, or all when quest is omitted" },
+                        { name: "start", value: "start", label: "Запустить Orion" },
+                        { name: "stop", value: "stop", label: "Остановить Orion" },
+                        { name: "status", value: "status", label: "Показать прогресс заданий" },
+                        { name: "pause", value: "pause", label: "Приостановить указанное задание или всю очередь" },
+                        { name: "resume", value: "resume", label: "Продолжить указанное задание или всю очередь" },
                     ],
                 },
                 {
                     name: "quest",
-                    description: "Quest name, unique name fragment, or ID for pause/resume; omit for all",
+                    description: "Название, уникальная часть названия или ID задания; пусто — вся очередь",
                     type: ApplicationCommandOptionType.STRING,
                     required: false,
                 },
@@ -568,14 +583,14 @@ export default definePlugin({
                 let response: string;
                 try {
                     if (target && action !== "pause" && action !== "resume") {
-                        response = "The quest option only applies to pause or resume.";
+                        response = "Выбор задания доступен только для паузы и продолжения.";
                     } else if (action === "start") response = await ensureReadyStart();
                     else if (action === "stop") response = await ensureReadyStop();
                     else if (action === "pause") response = await ensureReadyPause(target);
                     else if (action === "resume") response = await ensureReadyResume(target);
                     else response = await statusSummary();
                 } catch (error) {
-                    response = `Control unavailable: ${error instanceof Error ? error.message : String(error)}`;
+                    response = `Действие недоступно: ${error instanceof Error ? error.message : String(error)}`;
                 }
                 sendBotMessage(ctx.channel.id, { content: `**Orion**\n\`\`\`\n${response}\n\`\`\`` });
             },
@@ -583,6 +598,16 @@ export default definePlugin({
     ],
 
     start() {
+        initializeDashboard({
+            start: ensureReadyStart,
+            stop: ensureReadyStop,
+            pause: () => ensureReadyPause(),
+            resume: () => ensureReadyResume(),
+            quests: () => {
+                hideDashboard();
+                NavigationRouter.transitionTo("/quest-home");
+            }
+        });
         const generation = ++pluginLifecycleGeneration;
         pluginActive = true;
         pluginReady = false;
@@ -592,6 +617,7 @@ export default definePlugin({
     },
 
     stop() {
+        destroyDashboard();
         // Invalidate async initialization before teardown. Vencord does not await plugin start().
         pluginActive = false;
         pluginReady = false;
