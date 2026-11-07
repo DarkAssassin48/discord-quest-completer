@@ -210,7 +210,8 @@ export function toggleDashboard() {
 function onKeyDown(event: KeyboardEvent) {
     const target = event.target as HTMLElement | null;
     if (target?.closest('input,textarea,[contenteditable="true"]')) return;
-    if (event.shiftKey && event.code === "Period" && !event.ctrlKey && !event.altKey && !event.metaKey) {
+    const periodKey = event.code === "Period" || event.key === ">" || event.key === ".";
+    if (event.shiftKey && periodKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         toggleDashboard();
     } else if (event.key === "Escape" && panel && !panel.hidden) hideDashboard();
@@ -223,14 +224,14 @@ export function initializeDashboard(value: Controls) {
     questStore = getQuestStore();
     onStoreChanged = () => render();
     questStore?.addChangeListener?.(onStoreChanged);
-    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown, true);
 }
 
 export function destroyDashboard() {
     unsubscribe?.();
     unsubscribeEvents?.();
     if (onStoreChanged) questStore?.removeChangeListener?.(onStoreChanged);
-    document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("keydown", onKeyDown, true);
     panel?.remove();
     controls = null;
     panel = cards = logElement = null;
